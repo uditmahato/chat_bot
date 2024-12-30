@@ -1,0 +1,9 @@
+streamlit==1.18.0
+langchain==0.0.176
+langchain-community==0.0.40
+google-generative-ai==0.1.0
+pydantic==1.10.7
+phonenumbers==8.12.45
+PyPDF2==1.28.3
+python-docx==0.8.11
+dateparser==1.1.3
