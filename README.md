@@ -101,12 +101,6 @@ dateparser==1.1.3
 * If you encounter issues with Google API authentication, ensure that the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is properly set.
 * To add more file types or modify the chatbot's behavior, you can adjust the respective functions in the code.
 
-## Screenshots Setup
-
-To include the screenshots in your repository:
-* Create a `screenshots` directory in the root of your project.
-* Add your screenshots (`screenshot1.png` and `screenshot2.png`) inside the screenshots folder.
-
 ## License
 
 This project is licensed under the MIT License.
