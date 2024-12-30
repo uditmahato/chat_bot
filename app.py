@@ -12,7 +12,7 @@ from PyPDF2 import PdfReader
 from docx import Document
 
 # Set up the Google credentials
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/udit/Desktop/chat_bot/sharp-agent-392105-bf6377f9f1c7.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/udit/Desktop/chat_bot/.gitignore/sharp-agent-392105-bf6377f9f1c7.json"
 
 # Function to extract date in YYYY-MM-DD format
 def extract_date(user_query):
@@ -96,7 +96,10 @@ if uploaded_file:
         if st.button("Submit Query"):
             if query:
                 response = query_document(query, retriever)
-                st.write(f"**Response:** {response}")
+                if 'result' in response:
+                   st.write(f"**Response:** {response['result']}")
+                else:
+                   st.warning("No answer found.")
             else:
                 st.warning("Please enter a query.")
 
