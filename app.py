@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 import dateparser
+import pandas as pd
+from datetime import datetime
 from langchain.chains import RetrievalQA
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
@@ -30,7 +32,7 @@ class UserInfo(BaseModel):
 
     def validate_phone_number(self):
         try:
-            parsed = phonenumbers.parse(self.phone_number, None)
+            parsed = phonenumbers.parse(self.phone_number, "NP")  # Default to Nepal
             return phonenumbers.is_valid_number(parsed)
         except phonenumbers.NumberParseException:
             return False
@@ -72,6 +74,25 @@ def query_document(query, retriever):
     response = qa_chain.invoke(query)
     return response
 
+# Function to save appointment data to Excel
+def save_appointment_to_excel(name, phone, email, appointment_date):
+    file_path = "appointments.xlsx"
+    appointment_data = {
+        "Name": [name],
+        "Phone": [phone],
+        "Email": [email],
+        "Appointment Date": [appointment_date],
+        "Timestamp": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+    }
+    new_entry = pd.DataFrame(appointment_data)
+    try:
+        existing_data = pd.read_excel(file_path)
+        updated_data = pd.concat([existing_data, new_entry], ignore_index=True)
+    except FileNotFoundError:
+        updated_data = new_entry
+    updated_data.to_excel(file_path, index=False)
+    return file_path
+
 # Streamlit UI
 st.title("Interactive Chatbot Interface")
 
@@ -110,12 +131,15 @@ if retriever:
 st.subheader("Step 3: Book an Appointment")
 st.write("Fill out the form below to schedule an appointment.")
 
-name = st.text_input("Your Name:")
-phone = st.text_input("Phone Number:")
-email = st.text_input("Email Address:")
-date_query = st.text_input("Preferred Date (e.g., next Monday, December 25):")
+# Appointment form
+with st.form(key="appointment_form"):
+    name = st.text_input("Your Name:")
+    phone = st.text_input("Phone Number:")
+    email = st.text_input("Email Address:")
+    date_query = st.text_input("Preferred Date (e.g., next Monday, December 25):")
+    submit_button = st.form_submit_button("Submit Appointment Request")
 
-if st.button("Submit Appointment Request"):
+if submit_button:
     if not name or not phone or not email or not date_query:
         st.warning("Please fill in all the fields.")
     else:
@@ -128,6 +152,8 @@ if st.button("Submit Appointment Request"):
                 if "Could not parse" in appointment_date:
                     st.error(appointment_date)
                 else:
+                    file_path = save_appointment_to_excel(name, phone, email, appointment_date)
                     st.success(f"Appointment successfully booked for {name} on {appointment_date}.")
+                    st.write(f"Appointment details saved to: `{file_path}`")
         except ValidationError as e:
             st.error(f"Validation Error: {e}")
