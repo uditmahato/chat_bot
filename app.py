@@ -2,10 +2,10 @@ import streamlit as st
 import os
 import dateparser
 from langchain.chains import RetrievalQA
-from langchain_community.document_loaders import TextLoader  # Updated import
-from langchain_community.vectorstores import FAISS  # Updated import
-from langchain_google_genai import GoogleGenerativeAIEmbeddings  # Correct import for embeddings
-from langchain_google_genai.llms import GoogleGenerativeAI  # Correct import for LLM
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores import FAISS
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai.llms import GoogleGenerativeAI
 from pydantic import BaseModel, EmailStr, ValidationError
 import phonenumbers
 from PyPDF2 import PdfReader
@@ -59,74 +59,75 @@ def load_document_content(file):
 def load_retriever(file_path):
     loader = TextLoader(file_path)
     documents = loader.load()
-    embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")  # Use Gemini embeddings
+    embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vectorstore = FAISS.from_documents(documents, embedding)
     return vectorstore.as_retriever()
 
 # Function to process query with the retriever
 def query_document(query, retriever):
     qa_chain = RetrievalQA.from_chain_type(
-        llm=GoogleGenerativeAI(model="models/gemini-2.0-flash-exp"),  # Use Gemini model
-        retriever=retriever,  # Pass the retriever here
+        llm=GoogleGenerativeAI(model="models/gemini-2.0-flash-exp"),
+        retriever=retriever,
     )
     response = qa_chain.invoke(query)
     return response
 
 # Streamlit UI
-st.title("Interactive Chatbot with Document Upload")
+st.title("Interactive Chatbot Interface")
 
-# Upload document
-uploaded_file = st.file_uploader("Upload a text, PDF, or Word document", type=["txt", "pdf", "docx"])
+# Chatbot Interaction
+st.header("👋 Welcome to the Chatbot Assistant!")
+st.write("You can interact with documents, ask questions, and even book appointments.")
 
-# Process the uploaded file and generate retriever
+# Step 1: Upload document
+st.subheader("Step 1: Upload a Document")
+uploaded_file = st.file_uploader("Please upload a document (txt, pdf, or docx)", type=["txt", "pdf", "docx"])
+
+retriever = None
 if uploaded_file:
     content = load_document_content(uploaded_file)
     if content:
-        # Save content to a temporary file
         with open("uploaded_document.txt", "w") as f:
             f.write(content)
-
-        # Load document retriever
         retriever = load_retriever("uploaded_document.txt")
-        st.success("Document uploaded and processed successfully!")
+        st.success("Document uploaded successfully! You can now ask questions.")
 
-        # Chat interface
-        st.subheader("Chat with the Document")
-        query = st.text_input("Ask a question:")
-        if st.button("Submit Query"):
-            if query:
-                response = query_document(query, retriever)
-                if 'result' in response:
-                   st.write(f"**Response:** {response['result']}")
+# Step 2: Chat with the document
+st.subheader("Step 2: Chat with the Document")
+if retriever:
+    query = st.text_input("Ask a question about the document:")
+    if st.button("Get Response"):
+        if query:
+            response = query_document(query, retriever)
+            if 'result' in response:
+                st.write(f"**Response:** {response['result']}")
+            else:
+                st.warning("No answer found.")
+        else:
+            st.warning("Please enter a query.")
+
+# Step 3: Book an Appointment
+st.subheader("Step 3: Book an Appointment")
+st.write("Fill out the form below to schedule an appointment.")
+
+name = st.text_input("Your Name:")
+phone = st.text_input("Phone Number:")
+email = st.text_input("Email Address:")
+date_query = st.text_input("Preferred Date (e.g., next Monday, December 25):")
+
+if st.button("Submit Appointment Request"):
+    if not name or not phone or not email or not date_query:
+        st.warning("Please fill in all the fields.")
+    else:
+        try:
+            user = UserInfo(name=name, phone_number=phone, email=email)
+            if not user.validate_phone_number():
+                st.error("Invalid phone number format.")
+            else:
+                appointment_date = extract_date(date_query)
+                if "Could not parse" in appointment_date:
+                    st.error(appointment_date)
                 else:
-                   st.warning("No answer found.")
-            else:
-                st.warning("Please enter a query.")
-
-        # Book Appointment (Conversational form)
-        st.subheader("Book an Appointment")
-
-        # Collect user info
-        name = st.text_input("Your Name:")
-        phone = st.text_input("Phone Number:")
-        email = st.text_input("Email Address:")
-        date_query = st.text_input("Preferred Date (e.g., next Monday, December 25):")
-
-        if st.button("Book Appointment"):
-            if not name or not phone or not email or not date_query:
-                st.warning("Please fill all fields.")
-            else:
-                # Validate phone number and email
-                try:
-                    user = UserInfo(name=name, phone_number=phone, email=email)
-                    if not user.validate_phone_number():
-                        st.error("Invalid phone number.")
-                    else:
-                        # Extract and validate date
-                        date = extract_date(date_query)
-                        if "Could not parse" in date:
-                            st.error(date)
-                        else:
-                            st.success(f"Appointment booked for {name} on {date}.")
-                except ValidationError as e:
-                    st.error(f"Validation error: {e}")
+                    st.success(f"Appointment successfully booked for {name} on {appointment_date}.")
+        except ValidationError as e:
+            st.error(f"Validation Error: {e}")
