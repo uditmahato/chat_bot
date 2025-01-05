@@ -1,4 +1,4 @@
-# Interactive Chatbot with Document Upload
+# Document Query Chatbot
 
 This project implements an interactive chatbot using Streamlit, which allows users to upload text, PDF, or Word documents, query the document for information, and even book appointments via a conversational interface.
 
