@@ -85,15 +85,19 @@ Visit the URL provided in your terminal (typically http://localhost:8501/) to ac
 ## Requirements
 
 ```
-streamlit==1.18.0
-langchain==0.0.176
-langchain-community==0.0.40
-google-generative-ai==0.1.0
-pydantic==1.10.7
-phonenumbers==8.12.45
-PyPDF2==1.28.3
-python-docx==0.8.11
-dateparser==1.1.3
+streamlit==1.26.0
+langchain==0.3.13
+langchain-community==0.3.13
+google-generative.ai==0.8.3
+pydantic==2.10.4
+phonenumbers==8.13.52
+PyPDF2==3.0.1
+python-docx==1.1.2
+dateparser==1.2.0
+langchain-google-genai==2.0.7
+faiss-cpu==1.9.0
+pydantic[email]
+
 ```
 
 ## Notes
